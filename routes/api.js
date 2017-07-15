@@ -2,12 +2,15 @@ var express = require('express');
 var router = express.Router();
 var rp = require('request-promise');
 
+// routes
 /* GET a barcode, return ingredients */
 router.get('/barcode/:barcode', function(req, res){
     callFoodFacts(req.params.barcode)
         .then(function(result) {
             if (result.status == 1) {
+                console.log(process.env.OPEN_FOOD_KEY);
                 res.json({
+                    "food_name"     : result.product.generic_name,
                     "ingredients"   : result.product.ingredients_tags,
                     "nutrients"     : result.product.nutriments
                 });
@@ -22,6 +25,7 @@ router.get('/barcode/:barcode', function(req, res){
         });
 });
 
+// helper functions
 function callFoodFacts(barcode) {
     var options = {
         uri: "http://world.openfoodfacts.org/api/v0/product/"+barcode+".json",
@@ -32,6 +36,7 @@ function callFoodFacts(barcode) {
 }
 
 function getHealthyOption(foodObject) {
+    // find an api to search by food name
     
 }
 
