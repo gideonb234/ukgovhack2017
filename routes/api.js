@@ -3,12 +3,12 @@ var router = express.Router();
 var rp = require('request-promise');
 
 /* GET a barcode, return ingredients */
-router.get('/barcode/:barcode', function(req, res, next){
-    var foodObject = callFoodFacts(req.params.barcode)
+router.get('/barcode/:barcode', function(req, res){
+    callFoodFacts(req.params.barcode)
         .then(function(result) {
             if (result.status == 1) {
                 res.json({
-                    "ingredients"   : result.product.ingredients,
+                    "ingredients"   : result.product.ingredients_tags,
                     "nutrients"     : result.product.nutriments
                 });
             } else {
@@ -29,6 +29,10 @@ function callFoodFacts(barcode) {
     };
     
     return rp(options) 
+}
+
+function getHealthyOption(foodObject) {
+    
 }
 
 module.exports = router;
