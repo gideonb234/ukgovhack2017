@@ -11,11 +11,12 @@ router.get('/barcode/:barcode', function(req, res, next){
                     "ingredients"   : result.product.ingredients,
                     "nutrients"     : result.product.nutriments
                 });
+            } else {
+                res.json({
+                    'status'    : 0,
+                    'error'     : 'No product found'
+                });
             }
-            res.json({
-                'status'    : 0,
-                'error'     : 'No product found'
-            });
         }).catch(function(err) {
             res.json(err);
         });
