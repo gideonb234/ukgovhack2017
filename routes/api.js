@@ -9,29 +9,28 @@ router.get('/barcode/:barcode', function(req, res) {
         'barcode' : req.params.barcode,
         "res"     : res
     };
-    callFoodFacts(resp_obj)
-        .then(getDBPedia)
-        .then(processResult, getAltDBPedia)
-        .then(processResult)
-        .catch(function(err) {
-            res.json({
-                "err" : err.toString()
-            });
-        });
-
-    //  callFoodFacts(resp_obj)
-    //     .then(getFoodSearch)
+    // callFoodFacts(resp_obj)
+    //     .then(getDBPedia)
+    //     .then(processResult, getAltDBPedia)
     //     .then(processResult)
     //     .catch(function(err) {
     //         res.json({
     //             "err" : err.toString()
     //         });
     //     });
+
+     callFoodFacts(resp_obj)
+        .then(getFoodSearch)
+        .then(processResult)
+        .catch(function(err) {
+            res.json({
+                "err" : err.toString()
+            });
+        });
 });
 
 // helper functions
 function callFoodFacts(resp_obj) {
-    console.log(resp_obj.barcode);
     return new Promise(function(resolve, reject) {
         var options = {
             uri: "http://world.openfoodfacts.org/api/v0/product/"+resp_obj.barcode+".json",
@@ -109,38 +108,58 @@ function getAltDBPedia(foodInfo) {
 }
 
 function getFoodSearch(foodInfo) {
+
+    var params = {
+        "_source": {
+            "includes": [
+                "name_translations",
+                "barcode",
+                "ingredients",
+                "nutrients"
+            ]
+        },
+        "size": 20,
+        "query": {
+            "query_string": {
+                "fields" : [
+
+                ],
+                "query" : "Walkers Shortbread"
+            }
+        }
+    };
+
     return new Promise(function(resolve, reject) {
         var options = {
             uri: "https://www.openfood.ch/api/v3/products/_search",
             json: true,
             headers: {
-                "Authorization" : "Token token=9b116e0e80512b17eae9a72d3067d287"
+                "Authorization" : "Token token="+process.env.OPEN_FOOD_KEY,
+                "Content-Type"  : "application/json"
             },
             method: "POST",
-            postData: {
-                params: {
-                    "_source": {
-                        "includes": [
-                        "name_translations",
-                        "barcode",
-                        "ingredients",
-                        "nutrients"
-                        ]
-                    },
-                    "size": 20,
-                    "query": {
-                        "query_string": {
-                        "fields" : [
-
-                        ],
-                        "query" : "Walkers Shortbread"
-                        }
-                    }
-                }
-            }
+            body: 
+            { 
+                _source: { 
+                    includes: [ 
+                        'name_translations', 
+                        'barcode', 
+                        'ingredients', 
+                        'nutrients' 
+                    ] 
+                },
+                size: 20,
+                query: { 
+                    query_string: { 
+                        fields: [], 
+                        query: foodInfo.body.product.generic_name 
+                    } 
+                } 
+            },
         }
 
         return request(options, function(err, resp, body) {
+            console.log(body);
             var response = {
                 "body" : body,
                 "res"  : foodInfo.res
