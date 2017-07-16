@@ -191,9 +191,23 @@ function processDBResult(foodResult) {
 }
 
 function processOpenFoodResult(foodResult) {
+    var resultArray = [];
+    foodResult.body.hits.hits.forEach(function(item) {
+        
+        var label = item._source.display_name_translations;
+        if (item._source.display_name_translations.en) {
+            label = item._source.display_name_translations.en;
+        }
+        var obj = {
+            "label" : label,
+            "nutrients" : item._source.nutrients
+        };
+        resultArray.push(obj);
+    });
+
     var json_obj = {
         "status" : 1,
-        "result" : foodResult.body
+        "result" : resultArray
     };
     return foodResult.res.json(json_obj);
 }
