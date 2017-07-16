@@ -9,25 +9,32 @@ router.get('/barcode/:barcode', function(req, res) {
         'barcode' : req.params.barcode,
         "res"     : res
     };
-    // callFoodFacts(resp_obj)
-    //     .then(getDBPedia)
-    //     .then(processResult, getAltDBPedia)
-    //     .then(processResult)
-    //     .catch(function(err) {
-    //         res.json({
-    //             "err" : err.toString()
-    //         });
-    //     });
-
-     callFoodFacts(resp_obj)
-        .then(getFoodSearch)
-        .then(processResult)
+    callFoodFacts(resp_obj)
+        .then(getDBPedia)
+        .then(processDBResult, getAltDBPedia)
+        .then(processDBResult)
         .catch(function(err) {
             res.json({
                 "err" : err.toString()
             });
         });
 });
+
+router.get('/barcode/:barcode/food-search', function(req, res) {
+    var resp_obj = {
+        'barcode' : req.params.barcode,
+        "res"     : res
+    };
+
+    callFoodFacts(resp_obj)
+        .then(getFoodSearch)
+        .then(processOpenFoodResult)
+        .catch(function(err) {
+            res.json({
+                "err" : err.toString()
+            });
+        });
+})
 
 // helper functions
 function callFoodFacts(resp_obj) {
@@ -142,8 +149,6 @@ function getFoodSearch(foodInfo) {
             { 
                 _source: { 
                     includes: [ 
-                        'name_translations', 
-                        'barcode', 
                         'ingredients', 
                         'nutrients' 
                     ] 
@@ -169,16 +174,20 @@ function getFoodSearch(foodInfo) {
     });
 }
 
-function processResult(foodResult) {
-    // console.log(foodResult.body);
-    // return new Promise(function(resolve, reject){
-    // console.log('hello');
+function processDBResult(foodResult) {
+    var json_obj = {
+        "status" : 1,
+        "result" : foodResult.body.results
+    };
+    return foodResult.res.json(json_obj);
+}
+
+function processOpenFoodResult(foodResult) {
     var json_obj = {
         "status" : 1,
         "result" : foodResult.body
     };
     return foodResult.res.json(json_obj);
-    // });
 }
 
 function encodeNameForDBPedia(foodName) {
