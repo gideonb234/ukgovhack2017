@@ -63,10 +63,7 @@ function callFoodFacts(resp_obj) {
 }
 
 function getDBPedia(foodInfo) {
-    // use this link otherwise use the below link if no results found and show me the results
-    // http://lookup.dbpedia.org/api/search/KeywordSearch?QueryClass=food&QueryString=scotch_egg
-    // http://lookup.dbpedia.org/api/search/KeywordSearch?QueryString=scotch_egg
-    // console.log(foodInfo.body);
+
     return new Promise(function(resolve, reject) {
         var encoded_name = encodeNameForDBPedia(foodInfo.body.product.generic_name);
         var options = {
@@ -76,10 +73,8 @@ function getDBPedia(foodInfo) {
 
         return request(options, function(err, resp, body) {
             if (err || body.results.length < 1) {
-                console.log('bye friends');
                 return reject(foodInfo);
             }
-            console.log('hello friends');
             var response = {
                 "body" : body,
                 "res"  : foodInfo.res
@@ -91,7 +86,7 @@ function getDBPedia(foodInfo) {
 }
 
 function getAltDBPedia(foodInfo) {
-    // console.log(foodInfo.body);
+    
     return new Promise(function(resolve, reject) {
         var encoded_name = encodeNameForDBPedia(foodInfo.body.product.generic_name);
         var options = {
@@ -145,12 +140,12 @@ function getFoodSearch(foodInfo) {
                 "Content-Type"  : "application/json"
             },
             method: "POST",
-            body: 
-            { 
+            body: { 
                 _source: { 
                     includes: [ 
-                        'ingredients', 
-                        'nutrients' 
+                        "display_name_translations",
+                        "ingredients", 
+                        "nutrients"
                     ] 
                 },
                 size: 20,
@@ -164,7 +159,11 @@ function getFoodSearch(foodInfo) {
         }
 
         return request(options, function(err, resp, body) {
-            console.log(body);
+            if (body.status == 400) {
+                err = "Search failed";
+                return reject(err);
+            }
+
             var response = {
                 "body" : body,
                 "res"  : foodInfo.res
@@ -175,9 +174,18 @@ function getFoodSearch(foodInfo) {
 }
 
 function processDBResult(foodResult) {
+    var resultArray = [];
+    foodResult.body.results.forEach(function(item) {
+        var obj = {
+            "label"       : item.label,
+            "description" : item.description
+        }
+        resultArray.push(obj);
+    });
+
     var json_obj = {
         "status" : 1,
-        "result" : foodResult.body.results
+        "result" : resultArray
     };
     return foodResult.res.json(json_obj);
 }
@@ -191,7 +199,7 @@ function processOpenFoodResult(foodResult) {
 }
 
 function encodeNameForDBPedia(foodName) {
-    return foodName.replace(" ", "_");
+    return foodName.replace(/ /gi, "_");
 }
 
 module.exports = router;
